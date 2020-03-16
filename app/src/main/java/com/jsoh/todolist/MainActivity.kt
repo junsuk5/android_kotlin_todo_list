@@ -10,3 +10,5 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 }
+
+data class Todo(val text: String, var isDone: Boolean)
