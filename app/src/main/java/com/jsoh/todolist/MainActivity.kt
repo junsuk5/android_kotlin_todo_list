@@ -5,7 +5,9 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jsoh.todolist.databinding.ActivityMainBinding
@@ -14,7 +16,7 @@ import com.jsoh.todolist.databinding.ItemTodoBinding
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private val data = arrayListOf<Todo>()
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,36 +25,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(view)
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = TodoAdapter(data,
+            adapter = TodoAdapter(
+                viewModel.data,
                 onClickDeleteIcon = {
-                    deleteTodo(it)
+                    viewModel.deleteTodo(it)
+                    binding.recyclerView.adapter?.notifyDataSetChanged()
                 },
                 onClickItem = {
-                    toggleTodo(it)
+                    viewModel.toggleTodo(it)
+                    binding.recyclerView.adapter?.notifyDataSetChanged()
                 }
             )
         }
 
         binding.addButton.setOnClickListener {
-            addTodo()
+            val todo = Todo(binding.editText.text.toString())
+            viewModel.addTodo(todo)
+            binding.recyclerView.adapter?.notifyDataSetChanged()
         }
     }
 
-    private fun toggleTodo(todo: Todo) {
-        todo.isDone = !todo.isDone
-        binding.recyclerView.adapter?.notifyDataSetChanged()
-    }
-
-    private fun addTodo() {
-        val todo = Todo(binding.editText.text.toString())
-        data.add(todo)
-        binding.recyclerView.adapter?.notifyDataSetChanged()
-    }
-
-    private fun deleteTodo(todo: Todo) {
-        data.remove(todo)
-        binding.recyclerView.adapter?.notifyDataSetChanged()
-    }
 }
 
 data class Todo(
@@ -105,4 +97,20 @@ class TodoAdapter(
     }
 
     override fun getItemCount() = myDataset.size
+}
+
+class MainViewModel: ViewModel() {
+    val data = arrayListOf<Todo>()
+
+    fun toggleTodo(todo: Todo) {
+        todo.isDone = !todo.isDone
+    }
+
+    fun addTodo(todo: Todo) {
+        data.add(todo)
+    }
+
+    fun deleteTodo(todo: Todo) {
+        data.remove(todo)
+    }
 }
