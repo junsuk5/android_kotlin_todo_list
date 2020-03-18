@@ -187,19 +187,22 @@ class MainViewModel: ViewModel() {
     }
 
     fun fetchData() {
-        db.collection("todos")
-            .get()
-            .addOnSuccessListener { result ->
-                data.clear()
-                for (document in result) {
-                    val todo = Todo(
-                        document.data["text"] as String,
-                        document.data["isDone"] as Boolean
-                    )
-                    data.add(todo)
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            db.collection(user.uid)
+                .get()
+                .addOnSuccessListener { result ->
+                    data.clear()
+                    for (document in result) {
+                        val todo = Todo(
+                            document.data["text"] as String,
+                            document.data["isDone"] as Boolean
+                        )
+                        data.add(todo)
+                    }
+                    todoLiveData.value = data
                 }
-                todoLiveData.value = data
-            }
+        }
     }
 
     fun toggleTodo(todo: Todo) {
