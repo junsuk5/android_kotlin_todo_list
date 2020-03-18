@@ -1,5 +1,7 @@
 package com.jsoh.todolist
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Bundle
@@ -13,6 +15,8 @@ import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.IdpResponse
+import com.google.firebase.auth.FirebaseAuth
 import com.jsoh.todolist.databinding.ActivityMainBinding
 import com.jsoh.todolist.databinding.ItemTodoBinding
 
@@ -29,14 +33,18 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
+        // 로그인이 안 됨
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
 
-        startActivityForResult(
-            AuthUI.getInstance()
-                .createSignInIntentBuilder()
-                .setAvailableProviders(providers)
-                .build(),
-            RC_SIGN_IN)
+            startActivityForResult(
+                AuthUI.getInstance()
+                    .createSignInIntentBuilder()
+                    .setAvailableProviders(providers)
+                    .build(),
+                RC_SIGN_IN)
+        }
+
 
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
@@ -60,6 +68,23 @@ class MainActivity : AppCompatActivity() {
         viewModel.todoLiveData.observe(this, Observer {
             (binding.recyclerView.adapter as TodoAdapter).setData(it)
         })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val response = IdpResponse.fromResultIntent(data)
+
+            if (resultCode == Activity.RESULT_OK) {
+                // Successfully signed in
+                val user = FirebaseAuth.getInstance().currentUser
+
+            } else {
+                // 로그인 실패
+                finish()
+            }
+        }
     }
 
 }
