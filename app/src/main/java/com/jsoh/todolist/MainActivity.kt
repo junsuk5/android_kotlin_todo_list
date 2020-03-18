@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.jsoh.todolist.databinding.ActivityMainBinding
 import com.jsoh.todolist.databinding.ItemTodoBinding
 
@@ -70,8 +72,7 @@ class MainActivity : AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-
+                viewModel.fetchData()
             } else {
                 // 로그인 실패
                 finish()
@@ -175,9 +176,31 @@ class TodoAdapter(
 }
 
 class MainViewModel: ViewModel() {
+    val db = Firebase.firestore
+
     val todoLiveData = MutableLiveData<List<Todo>>()
 
     private val data = arrayListOf<Todo>()
+
+    init {
+        fetchData()
+    }
+
+    fun fetchData() {
+        db.collection("todos")
+            .get()
+            .addOnSuccessListener { result ->
+                data.clear()
+                for (document in result) {
+                    val todo = Todo(
+                        document.data["text"] as String,
+                        document.data["isDone"] as Boolean
+                    )
+                    data.add(todo)
+                }
+                todoLiveData.value = data
+            }
+    }
 
     fun toggleTodo(todo: Todo) {
         todo.isDone = !todo.isDone
