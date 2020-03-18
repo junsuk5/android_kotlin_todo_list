@@ -214,8 +214,9 @@ class MainViewModel: ViewModel() {
     }
 
     fun addTodo(todo: Todo) {
-        data.add(todo)
-        todoLiveData.value = data
+        FirebaseAuth.getInstance().currentUser?.let { user ->
+            db.collection(user.uid).add(todo)
+        }
     }
 
     fun deleteTodo(todo: Todo) {
